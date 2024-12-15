@@ -2,8 +2,18 @@
 # act-build-win.yml
 name: act build win
 
+env:
+  TAG_NAME: "StirlingPDF-win"
+
 on:
   workflow_dispatch:
+    inputs:
+      upload_artifacts:
+        description: upload artifacts to workflow
+        type: boolean
+        default: false
+        required: true
+
 #  release:
 #    types: [created]
 permissions:
@@ -47,6 +57,8 @@ jobs:
         run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
 
       - name: Upload Assets binaries
+        if: ${{ inputs.upload_artifacts }}
+        continue-on-error: true
         uses: deep-soft/upload-artifact@v4
         with:
           path: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
@@ -58,12 +70,16 @@ jobs:
       - name: Upload binaries to release
         uses: deep-soft/action-gh-release@v2.1
         with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
           files: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
 
       - name: Rename jar binaries
         run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
       - name: Upload Assets jar binaries
+        if: ${{ inputs.upload_artifacts }}
+        continue-on-error: true
         uses: deep-soft/upload-artifact@v4
         with:
           path: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
@@ -75,6 +91,8 @@ jobs:
       - name: Upload jar binaries to release
         uses: deep-soft/action-gh-release@v2.1
         with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
           files: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
 
 
@@ -104,6 +122,8 @@ jobs:
         run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
 
       - name: Upload Assets binaries
+        if: ${{ inputs.upload_artifacts }}
+        continue-on-error: true
         uses: deep-soft/upload-artifact@v4
         with:
           path: ./build/launch4j/Stirling-PDF.exe
@@ -115,4 +135,6 @@ jobs:
       - name: Upload binaries to release
         uses: deep-soft/action-gh-release@v2.1
         with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}
           files: ./build/launch4j/Stirling-PDF.exe
