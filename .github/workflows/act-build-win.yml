@@ -42,6 +42,7 @@ jobs:
         run: |
           PRG_VER=$(./gradlew printVersion --quiet | tail -1);
           echo "versionNumber=$PRG_VER" >> $GITHUB_OUTPUT;
+          echo "PRG_VER=$PRG_VER" >> $GITHUB_ENV;
           echo "PRG_VER=$PRG_VER";
 
       - name: Create source archive
@@ -106,6 +107,7 @@ jobs:
         run: |
           PRG_VER=$(./gradlew printVersion --quiet | tail -1);
           echo "versionNumber=$PRG_VER" >> $GITHUB_OUTPUT;
+          echo "PRG_VER=$PRG_VER" >> $GITHUB_ENV;
           echo "PRG_VER=$PRG_VER";
 
       - name: Rename binaries
@@ -186,6 +188,7 @@ jobs:
         run: |
           PRG_VER=$(./gradlew printVersion --quiet | tail -1);
           echo "versionNumber=$PRG_VER" >> $GITHUB_OUTPUT;
+          echo "PRG_VER=$PRG_VER" >> $GITHUB_ENV;
           echo "PRG_VER=$PRG_VER";
 
       - name: Upload Assets binaries
