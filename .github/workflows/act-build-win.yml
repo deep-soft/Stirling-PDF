@@ -4,6 +4,8 @@ name: act build win
 
 env:
   TAG_NAME: "StirlingPDF-win"
+  PRG_NAME: "Stirling-PDF"
+  PRG_VER:  "1.0.0"
 
 on:
   workflow_dispatch:
@@ -20,8 +22,52 @@ permissions:
   contents: write
   packages: write
 jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: deep-soft/checkout@v4
+
+      - name: Set up JDK 17
+        uses: deep-soft/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+
+      - name: Get version number
+        id: versionNumber
+        run: |
+          PRG_VER=$(./gradlew printVersion --quiet | tail -1);
+          echo "versionNumber=$PRG_VER" >> $GITHUB_OUTPUT;
+          echo "PRG_VER=$PRG_VER";
+
+      - name: Create source archive
+        continue-on-error: true
+        uses: deep-soft/zip-release@v3
+        with:
+          type: 'tar.xz'
+          # ${{ env.TAG_NAME }}-${{ steps.versionNumber.outputs.versionNumber }}
+          filename: "${{ env.PRG_NAME }}-src-${{ env.PRG_VER }}"
+          directory: '.'
+          exclusions: ''
+          recursive_exclusions: ''
+          path: '.'
+          env_variable: ASSET_SRC
+        # archive name is ${{ env.ZIP_RELEASE_ARCHIVE }}
+
+      - name: Upload source archive to release
+        uses: deep-soft/action-gh-release@v2.1
+        with:
+          draft: true
+          tag_name: ${{ env.TAG_NAME }}-${{ env.PRG_VER }}
+          files: ${{ env.ASSET_SRC }}
+
   push:
     runs-on: ubuntu-latest
+    needs: [source]
     strategy:
       matrix:
         enable_security: [true, false]
@@ -44,25 +90,35 @@ jobs:
           gradle-version: 8.7
 
       - name: Generate jar (With Security=${{ matrix.enable_security }})
-        run: ./gradlew clean createExe
+        run: |
+          ./gradlew clean createExe
         env:
           DOCKER_ENABLE_SECURITY: ${{ matrix.enable_security }}
           STIRLING_PDF_DESKTOP_UI: false
 
+#      - name: Get version number
+#        id: versionNumber
+#        run: |
+#          echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: |
+          PRG_VER=$(./gradlew printVersion --quiet | tail -1);
+          echo "versionNumber=$PRG_VER" >> $GITHUB_OUTPUT;
+          echo "PRG_VER=$PRG_VER";
 
-      - name: Rename binarie
-        run: cp ./build/launch4j/Stirling-PDF.exe ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+      - name: Rename binaries
+        run: |
+          cp ./build/launch4j/${{ env.PRG_NAME }}.exe ./build/launch4j/${{ env.PRG_NAME }}-Server${{ matrix.file_suffix }}.exe
 
       - name: Upload Assets binaries
         if: ${{ inputs.upload_artifacts }}
         continue-on-error: true
         uses: deep-soft/upload-artifact@v4
         with:
-          path: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
-          name: Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+          path: ./build/launch4j/${{ env.PRG_NAME }}-Server${{ matrix.file_suffix }}.exe
+          name: ${{ env.PRG_NAME }}-Server${{ matrix.file_suffix }}.exe
           overwrite: true
           retention-days: 1
           if-no-files-found: error
@@ -71,19 +127,20 @@ jobs:
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: ./build/launch4j/Stirling-PDF-Server${{ matrix.file_suffix }}.exe
+          tag_name: ${{ env.TAG_NAME }}-${{ env.PRG_VER }}
+          files: ./build/launch4j/${{ env.PRG_NAME }}-Server${{ matrix.file_suffix }}.exe
 
       - name: Rename jar binaries
-        run: cp ./build/libs/Stirling-PDF-${{ steps.versionNumber.outputs.versionNumber }}.jar ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+        run: |
+          cp ./build/libs/${{ env.PRG_NAME }}-${{ env.PRG_VER }}.jar ./build/libs/${{ env.PRG_NAME }}${{ matrix.file_suffix }}.jar
 
       - name: Upload Assets jar binaries
         if: ${{ inputs.upload_artifacts }}
         continue-on-error: true
         uses: deep-soft/upload-artifact@v4
         with:
-          path: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
-          name: Stirling-PDF${{ matrix.file_suffix }}.jar
+          path: ./build/libs/${{ env.PRG_NAME }}${{ matrix.file_suffix }}.jar
+          name: ${{ env.PRG_NAME }}${{ matrix.file_suffix }}.jar
           overwrite: true
           retention-days: 1
           if-no-files-found: error
@@ -92,12 +149,13 @@ jobs:
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: ./build/libs/Stirling-PDF${{ matrix.file_suffix }}.jar
+          tag_name: ${{ env.TAG_NAME }}-${{ env.PRG_VER }}
+          files: ./build/libs/${{ env.PRG_NAME }}${{ matrix.file_suffix }}.jar
 
 
   push-ui:
     runs-on: ubuntu-latest
+    needs: [source]
     steps:
       - uses: deep-soft/checkout@v4
 
@@ -112,22 +170,31 @@ jobs:
           gradle-version: 8.7
 
       - name: Generate exe
-        run: ./gradlew clean createExe
+        run: |
+          ./gradlew clean createExe
         env:
           DOCKER_ENABLE_SECURITY: false
           STIRLING_PDF_DESKTOP_UI: true
 
+#      - name: Get version number
+#        id: versionNumber
+#        run: |
+#          echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+
       - name: Get version number
         id: versionNumber
-        run: echo "versionNumber=$(./gradlew printVersion --quiet | tail -1)" >> $GITHUB_OUTPUT
+        run: |
+          PRG_VER=$(./gradlew printVersion --quiet | tail -1);
+          echo "versionNumber=$PRG_VER" >> $GITHUB_OUTPUT;
+          echo "PRG_VER=$PRG_VER";
 
       - name: Upload Assets binaries
         if: ${{ inputs.upload_artifacts }}
         continue-on-error: true
         uses: deep-soft/upload-artifact@v4
         with:
-          path: ./build/launch4j/Stirling-PDF.exe
-          name: Stirling-PDF.exe
+          path: ./build/launch4j/${{ env.PRG_NAME }}.exe
+          name: ${{ env.PRG_NAME }}.exe
           overwrite: true
           retention-days: 1
           if-no-files-found: error
@@ -136,5 +203,5 @@ jobs:
         uses: deep-soft/action-gh-release@v2.1
         with:
           draft: true
-          tag_name: ${{ env.TAG_NAME }}
-          files: ./build/launch4j/Stirling-PDF.exe
+          tag_name: ${{ env.TAG_NAME }}-${{ env.PRG_VER }}
+          files: ./build/launch4j/${{ env.PRG_NAME }}.exe
