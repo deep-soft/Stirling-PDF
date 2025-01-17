@@ -26,7 +26,8 @@ jobs:
         github.event.comment.user.login == 'Ludy87' ||
         github.event.comment.user.login == 'LaserKaspar' ||
         github.event.comment.user.login == 'sbplat' ||
-        github.event.comment.user.login == 'reecebrowne'
+        github.event.comment.user.login == 'reecebrowne' ||
+        github.event.comment.user.login == 'DarioGii'
       )
     outputs:
       pr_number: ${{ steps.get-pr.outputs.pr_number }}
@@ -35,7 +36,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
         with:
           egress-policy: audit
 
@@ -80,7 +81,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        uses: step-security/harden-runner@c95a14d0e5bab51a9f56296a4eb0e416910cd350 # v2.10.3
         with:
           egress-policy: audit
 
@@ -94,8 +95,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          java-version: "17"
+          distribution: "temurin"
 
       - name: Run Gradle Command
         run: ./gradlew clean build
@@ -118,7 +119,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_API }}
 
       - name: Build and push PR-specific image
-        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        uses: docker/build-push-action@b32b51a8eda65d6793cd0494a773d4f6bcef32dc # v6.11.0
         with:
           context: .
           file: ./Dockerfile

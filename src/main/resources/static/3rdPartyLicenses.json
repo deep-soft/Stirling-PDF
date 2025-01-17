@@ -85,6 +85,27 @@
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
+            "moduleUrl": "https://github.com/FasterXML/jackson-jaxrs-providers/jackson-jaxrs-base",
+            "moduleVersion": "2.18.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
+            "moduleUrl": "https://github.com/FasterXML/jackson-jaxrs-providers/jackson-jaxrs-json-provider",
+            "moduleVersion": "2.18.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
+            "moduleUrl": "https://github.com/FasterXML/jackson-modules-base",
+            "moduleVersion": "2.18.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "com.fasterxml.jackson.module:jackson-module-parameter-names",
             "moduleUrl": "https://github.com/FasterXML/jackson-modules-java8/jackson-module-parameter-names",
             "moduleVersion": "2.18.2",
@@ -263,7 +284,7 @@
         {
             "moduleName": "com.opencsv:opencsv",
             "moduleUrl": "http://opencsv.sf.net",
-            "moduleVersion": "5.9",
+            "moduleVersion": "5.10",
             "moduleLicense": "Apache 2",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -342,6 +363,20 @@
             "moduleLicenseUrl": "https://github.com/haraldk/TwelveMonkeys#license"
         },
         {
+            "moduleName": "com.unboundid.product.scim2:scim2-sdk-client",
+            "moduleUrl": "https://github.com/pingidentity/scim2",
+            "moduleVersion": "2.3.5",
+            "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
+            "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
+        },
+        {
+            "moduleName": "com.unboundid.product.scim2:scim2-sdk-common",
+            "moduleUrl": "https://github.com/pingidentity/scim2",
+            "moduleVersion": "2.3.5",
+            "moduleLicense": "UnboundID SCIM2 SDK Free Use License",
+            "moduleLicenseUrl": "https://github.com/pingidentity/scim2"
+        },
+        {
             "moduleName": "com.zaxxer:HikariCP",
             "moduleUrl": "https://github.com/brettwooldridge/HikariCP",
             "moduleVersion": "5.1.0",
@@ -350,9 +385,9 @@
         },
         {
             "moduleName": "commons-beanutils:commons-beanutils",
-            "moduleUrl": "https://commons.apache.org/proper/commons-beanutils/",
-            "moduleVersion": "1.9.4",
-            "moduleLicense": "Apache License, Version 2.0",
+            "moduleUrl": "https://commons.apache.org/proper/commons-beanutils",
+            "moduleVersion": "1.10.0",
+            "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
@@ -413,7 +448,7 @@
         {
             "moduleName": "io.micrometer:micrometer-core",
             "moduleUrl": "https://github.com/micrometer-metrics/micrometer",
-            "moduleVersion": "1.14.2",
+            "moduleVersion": "1.14.3",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -550,6 +585,20 @@
             "moduleLicenseUrl": "https://www.gnu.org/software/classpath/license.html"
         },
         {
+            "moduleName": "javax.activation:javax.activation-api",
+            "moduleUrl": "http://www.oracle.com",
+            "moduleVersion": "1.2.0",
+            "moduleLicense": "COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.0",
+            "moduleLicenseUrl": "https://opensource.org/licenses/CDDL-1.0"
+        },
+        {
+            "moduleName": "javax.xml.bind:jaxb-api",
+            "moduleUrl": "http://www.oracle.com/",
+            "moduleVersion": "2.3.1",
+            "moduleLicense": "GPL2 w/ CPE",
+            "moduleLicenseUrl": "https://oss.oracle.com/licenses/CDDL+GPL-1.1"
+        },
+        {
             "moduleName": "me.friwi:gluegen-rt",
             "moduleUrl": "http://jogamp.org/gluegen/www/",
             "moduleVersion": "v2.4.0-rc-20210111",
@@ -641,7 +690,7 @@
         {
             "moduleName": "org.apache.commons:commons-text",
             "moduleUrl": "https://commons.apache.org/proper/commons-text",
-            "moduleVersion": "1.11.0",
+            "moduleVersion": "1.13.0",
             "moduleLicense": "Apache-2.0",
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
@@ -1188,6 +1237,13 @@
             "moduleVersion": "9.7.1",
             "moduleLicense": "The Apache Software License, Version 2.0",
             "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.postgresql:postgresql",
+            "moduleUrl": "https://jdbc.postgresql.org/",
+            "moduleVersion": "42.7.4",
+            "moduleLicense": "BSD-2-Clause",
+            "moduleLicenseUrl": "https://jdbc.postgresql.org/about/license.html"
         },
         {
             "moduleName": "org.slf4j:jul-to-slf4j",
