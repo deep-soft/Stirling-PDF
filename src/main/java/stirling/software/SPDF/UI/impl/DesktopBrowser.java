@@ -34,13 +34,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PreDestroy;
+
 import lombok.extern.slf4j.Slf4j;
+
 import me.friwi.jcefmaven.CefAppBuilder;
 import me.friwi.jcefmaven.EnumProgress;
 import me.friwi.jcefmaven.MavenCefAppHandlerAdapter;
 import me.friwi.jcefmaven.impl.progress.ConsoleProgressHandler;
+
 import stirling.software.SPDF.UI.WebBrowser;
 import stirling.software.SPDF.config.InstallationPathConfig;
+import stirling.software.SPDF.utils.UIScaling;
 
 @Component
 @Slf4j
@@ -215,7 +219,7 @@ public class DesktopBrowser implements WebBrowser {
                     }
                 });
 
-        frame.setSize(1280, 768);
+        frame.setSize(UIScaling.scaleWidth(1280), UIScaling.scaleHeight(800));
         frame.setLocationRelativeTo(null);
 
         loadIcon();
@@ -264,7 +268,9 @@ public class DesktopBrowser implements WebBrowser {
                                                 frame.setOpacity(1.0f);
                                                 frame.setUndecorated(false);
                                                 frame.pack();
-                                                frame.setSize(1280, 800);
+                                                frame.setSize(
+                                                        UIScaling.scaleWidth(1280),
+                                                        UIScaling.scaleHeight(800));
                                                 frame.setLocationRelativeTo(null);
                                                 log.debug("Frame reconfigured");
 

@@ -18,7 +18,7 @@ jobs:
       id-token: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
         with:
           egress-policy: audit
 
@@ -38,10 +38,11 @@ jobs:
         run: ./gradlew clean build
         env:
           DOCKER_ENABLE_SECURITY: false
+          STIRLING_PDF_DESKTOP_UI: false
 
       - name: Install cosign
         if: github.ref == 'refs/heads/master'
-        uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
         with:
           cosign-release: "v2.4.1"
 
@@ -89,7 +90,7 @@ jobs:
 
       - name: Build and push main Dockerfile
         id: build-push-regular
-        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
+        uses: docker/build-push-action@0adf9959216b96bec444f325f1e493d4aa344497 # v6.14.0
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
@@ -134,7 +135,7 @@ jobs:
 
       - name: Build and push Dockerfile-ultra-lite
         id: build-push-lite
-        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
+        uses: docker/build-push-action@0adf9959216b96bec444f325f1e493d4aa344497 # v6.14.0
         if: github.ref != 'refs/heads/main'
         with:
           context: .
@@ -165,7 +166,7 @@ jobs:
 
       - name: Build and push main Dockerfile fat
         id: build-push-fat
-        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
+        uses: docker/build-push-action@0adf9959216b96bec444f325f1e493d4aa344497 # v6.14.0
         if: github.ref != 'refs/heads/main'
         with:
           builder: ${{ steps.buildx.outputs.name }}
