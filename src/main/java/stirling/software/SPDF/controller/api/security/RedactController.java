@@ -14,7 +14,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
@@ -28,6 +27,7 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PDFText;
@@ -45,14 +45,10 @@ import stirling.software.SPDF.utils.propertyeditor.StringToArrayListPropertyEdit
 @RequestMapping("/api/v1/security")
 @Slf4j
 @Tag(name = "Security", description = "Security APIs")
+@RequiredArgsConstructor
 public class RedactController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public RedactController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -79,7 +75,7 @@ public class RedactController {
         redactPages(request, document, allPages);
         redactAreas(redactionAreas, document, allPages);
 
-        if (request.isConvertPDFToImage()) {
+        if (Boolean.TRUE.equals(request.getConvertPDFToImage())) {
             PDDocument convertedPdf = PdfUtils.convertPdfToPdfImage(document);
             document.close();
             document = convertedPdf;
@@ -174,14 +170,14 @@ public class RedactController {
     }
 
     private Color decodeOrDefault(String hex, Color defaultColor) {
-        Color color = null;
         try {
-            color = Color.decode(hex);
+            if (hex != null && !hex.startsWith("#")) {
+                hex = "#" + hex;
+            }
+            return Color.decode(hex);
         } catch (Exception e) {
-            color = defaultColor;
+            return defaultColor;
         }
-
-        return color;
     }
 
     private List<Integer> getPageNumbers(ManualRedactPdfRequest request, int pagesCount) {
@@ -204,11 +200,11 @@ public class RedactController {
             throws Exception {
         MultipartFile file = request.getFileInput();
         String listOfTextString = request.getListOfText();
-        boolean useRegex = request.isUseRegex();
-        boolean wholeWordSearchBool = request.isWholeWordSearch();
+        boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
+        boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
         String colorString = request.getRedactColor();
         float customPadding = request.getCustomPadding();
-        boolean convertPDFToImage = request.isConvertPDFToImage();
+        boolean convertPDFToImage = Boolean.TRUE.equals(request.getConvertPDFToImage());
 
         String[] listOfText = listOfTextString.split("\n");
         PDDocument document = pdfDocumentFactory.load(file);

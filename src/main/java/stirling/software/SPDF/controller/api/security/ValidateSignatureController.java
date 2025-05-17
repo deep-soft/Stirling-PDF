@@ -1,5 +1,6 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.beans.PropertyEditorSupport;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.cert.CertificateException;
@@ -21,8 +22,10 @@ import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
 import org.bouncycastle.util.Store;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,6 +35,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.api.security.SignatureValidationRequest;
 import stirling.software.SPDF.model.api.security.SignatureValidationResult;
 import stirling.software.SPDF.service.CertificateValidationService;
@@ -40,17 +45,22 @@ import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 @RestController
 @RequestMapping("/api/v1/security")
 @Tag(name = "Security", description = "Security APIs")
+@RequiredArgsConstructor
 public class ValidateSignatureController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final CertificateValidationService certValidationService;
 
-    @Autowired
-    public ValidateSignatureController(
-            CustomPDFDocumentFactory pdfDocumentFactory,
-            CertificateValidationService certValidationService) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-        this.certValidationService = certValidationService;
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(
+                MultipartFile.class,
+                new PropertyEditorSupport() {
+                    @Override
+                    public void setAsText(String text) throws IllegalArgumentException {
+                        setValue(null);
+                    }
+                });
     }
 
     @Operation(
@@ -58,17 +68,17 @@ public class ValidateSignatureController {
             description =
                     "Validates the digital signatures in a PDF file against default or custom"
                             + " certificates. Input:PDF Output:JSON Type:SISO")
-    @PostMapping(value = "/validate-signature")
+    @PostMapping(value = "/validate-signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<List<SignatureValidationResult>> validateSignature(
             @ModelAttribute SignatureValidationRequest request) throws IOException {
         List<SignatureValidationResult> results = new ArrayList<>();
         MultipartFile file = request.getFileInput();
+        MultipartFile certFile = request.getCertFile();
 
         // Load custom certificate if provided
         X509Certificate customCert = null;
-        if (request.getCertFile() != null && !request.getCertFile().isEmpty()) {
-            try (ByteArrayInputStream certStream =
-                    new ByteArrayInputStream(request.getCertFile().getBytes())) {
+        if (certFile != null && !certFile.isEmpty()) {
+            try (ByteArrayInputStream certStream = new ByteArrayInputStream(certFile.getBytes())) {
                 CertificateFactory cf = CertificateFactory.getInstance("X.509");
                 customCert = (X509Certificate) cf.generateCertificate(certStream);
             } catch (CertificateException e) {

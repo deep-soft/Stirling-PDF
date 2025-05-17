@@ -18,7 +18,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.general.MergePdfsRequest;
@@ -40,14 +40,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @Slf4j
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
+@RequiredArgsConstructor
 public class MergeController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public MergeController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     // Merges a list of PDDocument objects into a single PDDocument
     public PDDocument mergeDocuments(List<PDDocument> documents) throws IOException {
@@ -121,20 +117,20 @@ public class MergeController {
                     "This endpoint merges multiple PDF files into a single PDF file. The merged"
                             + " file will contain all pages from the input files in the order they were"
                             + " provided. Input:PDF Output:PDF Type:MISO")
-    public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest form)
+    public ResponseEntity<byte[]> mergePdfs(@ModelAttribute MergePdfsRequest request)
             throws IOException {
         List<File> filesToDelete = new ArrayList<>(); // List of temporary files to delete
         File mergedTempFile = null;
         PDDocument mergedDocument = null;
 
-        boolean removeCertSign = form.isRemoveCertSign();
+        boolean removeCertSign = Boolean.TRUE.equals(request.getRemoveCertSign());
 
         try {
-            MultipartFile[] files = form.getFileInput();
+            MultipartFile[] files = request.getFileInput();
             Arrays.sort(
                     files,
                     getSortComparator(
-                            form.getSortType())); // Sort files based on the given sort type
+                            request.getSortType())); // Sort files based on the given sort type
 
             PDFMergerUtility mergerUtility = new PDFMergerUtility();
             long totalSize = 0;

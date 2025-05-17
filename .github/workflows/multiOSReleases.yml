@@ -2,6 +2,11 @@ name: Test Installers Build
 
 on:
   workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Run in test mode (skip release step)"
+        required: false
+        default: "false"
   release:
     types: [created]
 
@@ -16,7 +21,7 @@ jobs:
       versionMac: ${{ steps.versionNumberMac.outputs.versionNumberMac }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
@@ -51,21 +56,21 @@ jobs:
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "21"
           distribution: "temurin"
 
       - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
-          gradle-version: 8.12
+          gradle-version: 8.14
 
       - name: Generate jar (With Security=${{ matrix.enable_security }})
         run: ./gradlew clean createExe
@@ -101,12 +106,12 @@ jobs:
             file_suffix: ""
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
       - name: Download build artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: stirling-${{ matrix.file_suffix }}binaries
 
@@ -139,21 +144,21 @@ jobs:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           java-version: "21"
           distribution: "temurin"
 
       - uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
         with:
-          gradle-version: 8.12
+          gradle-version: 8.14
 
       # Install Windows dependencies
       - name: Install WiX Toolset
@@ -170,6 +175,23 @@ jobs:
           STIRLING_PDF_DESKTOP_UI: true
           BROWSER_OPEN: true
 
+      - name: Set up JDK (x86_64)
+        if: matrix.os == 'macos-latest'
+        run: |
+          curl -L -o jdk.tar.gz https://cdn.azul.com/zulu/bin/zulu17.56.15-ca-jdk17.0.14-macosx_x64.tar.gz
+          mkdir -p zulu17
+          tar -xzf jdk.tar.gz -C zulu17 --strip-components=1
+          echo "JAVA_HOME=$PWD/zulu17" >> $GITHUB_ENV
+          echo "$PWD/zulu17/bin" >> $GITHUB_PATH
+
+      -   name: Verify JDK architecture
+          if: matrix.os == 'macos-latest'
+          run: file $JAVA_HOME/bin/java
+
+      -   name: Build project and run jpackage (x86_64)
+          if: matrix.os == 'macos-latest'
+          run: arch -x86_64 ./gradlew jpackageMacX64
+
       # Rename and collect artifacts based on OS
       - name: Prepare artifacts
         id: prepare
@@ -178,10 +200,10 @@ jobs:
           ls -lah ./build/jpackage/
           mkdir ./binaries
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
+            mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.version }}.exe" "./binaries/Stirling-PDF-win-installer.exe"
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv "./build/jpackage/Stirling-PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
-            mv "./build/jpackage/Stirling-PDF-x86_64-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
+            mv "./build/jpackage/Stirling PDF-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-installer.dmg"
+            mv "./build/jpackage/x86_64/Stirling PDF (x86_64)-${{ needs.read_versions.outputs.versionMac }}.dmg" "./binaries/Stirling-PDF-mac-x86_64-installer.dmg"
           else
             mv "./build/jpackage/stirling-pdf_${{ needs.read_versions.outputs.version }}-1_amd64.deb" "./binaries/Stirling-PDF-linux-installer.deb"
           fi
@@ -212,12 +234,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
       - name: Download build artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ${{ matrix.platform }}binaries
 
@@ -226,7 +248,7 @@ jobs:
 
       - name: Install Cosign
         if: matrix.os == 'windows-latest'
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
 
       - name: Generate key pair
         if: matrix.os == 'windows-latest'
@@ -264,21 +286,23 @@ jobs:
           name: ${{ matrix.platform }}signed
           path: |
             ./Stirling-PDF-${{ matrix.platform }}installer.*
+            ./Stirling-PDF-${{ matrix.platform }}x86_64-installer.*
             !cosign.*
 
   create-release:
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.test_mode != 'true'
     needs: [read_versions, sign_verify, sign_verify-portable]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
         with:
           egress-policy: audit
 
       - name: Download signed artifacts
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       - name: Display structure of downloaded files
         run: ls -R
       - name: Upload binaries, attestations and signatures to Release and create GitHub Release

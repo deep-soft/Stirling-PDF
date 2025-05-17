@@ -10,7 +10,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -23,6 +22,8 @@ import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.api.misc.AddPageNumbersRequest;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.GeneralUtils;
@@ -31,14 +32,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/misc")
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class PageNumbersController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public PageNumbersController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(value = "/add-page-numbers", consumes = "multipart/form-data")
     @Operation(
@@ -52,20 +49,17 @@ public class PageNumbersController {
         MultipartFile file = request.getFileInput();
         String customMargin = request.getCustomMargin();
         int position = request.getPosition();
-        int startingNumber = request.getStartingNumber();
+        int pageNumber = request.getStartingNumber();
         String pagesToNumber = request.getPagesToNumber();
         String customText = request.getCustomText();
-        int pageNumber = startingNumber;
+        float fontSize = request.getFontSize();
+        String fontType = request.getFontType();
+
         PDDocument document = pdfDocumentFactory.load(file);
-        float font_size = request.getFontSize();
-        String font_type = request.getFontType();
         float marginFactor;
         switch (customMargin.toLowerCase()) {
             case "small":
                 marginFactor = 0.02f;
-                break;
-            case "medium":
-                marginFactor = 0.035f;
                 break;
             case "large":
                 marginFactor = 0.05f;
@@ -73,12 +67,12 @@ public class PageNumbersController {
             case "x-large":
                 marginFactor = 0.075f;
                 break;
+            case "medium":
             default:
                 marginFactor = 0.035f;
                 break;
         }
 
-        float fontSize = font_size;
         if (pagesToNumber == null || pagesToNumber.isEmpty()) {
             pagesToNumber = "all";
         }
@@ -102,7 +96,7 @@ public class PageNumbersController {
                                             .replaceFirst("[.][^.]+$", ""));
 
             PDType1Font currentFont =
-                    switch (font_type.toLowerCase()) {
+                    switch (fontType.toLowerCase()) {
                         case "courier" -> new PDType1Font(Standard14Fonts.FontName.COURIER);
                         case "times" -> new PDType1Font(Standard14Fonts.FontName.TIMES_ROMAN);
                         default -> new PDType1Font(Standard14Fonts.FontName.HELVETICA);

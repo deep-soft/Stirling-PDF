@@ -16,19 +16,18 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.FileUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.misc.ExtractImageScansRequest;
@@ -42,16 +41,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/misc")
 @Slf4j
 @Tag(name = "Misc", description = "Miscellaneous APIs")
+@RequiredArgsConstructor
 public class ExtractImageScansController {
 
     private static final String REPLACEFIRST = "[.][^.]+$";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public ExtractImageScansController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/extract-image-scans")
     @Operation(
@@ -62,24 +57,11 @@ public class ExtractImageScansController {
                             + " minimum contour area, and border size. Input:PDF Output:IMAGE/ZIP"
                             + " Type:SIMO")
     public ResponseEntity<byte[]> extractImageScans(
-            @RequestBody(
-                            description = "Form data containing file and extraction parameters",
-                            required = true,
-                            content =
-                                    @Content(
-                                            mediaType = "multipart/form-data",
-                                            schema =
-                                                    @Schema(
-                                                            implementation =
-                                                                    ExtractImageScansRequest
-                                                                            .class) // This should
-                                            // represent
-                                            // your form's
-                                            // structure
-                                            ))
-                    ExtractImageScansRequest form)
+            @ModelAttribute ExtractImageScansRequest request)
             throws IOException, InterruptedException {
-        String fileName = form.getFileInput().getOriginalFilename();
+        MultipartFile inputFile = request.getFileInput();
+
+        String fileName = inputFile.getOriginalFilename();
         String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
 
         List<String> images = new ArrayList<>();
@@ -98,7 +80,7 @@ public class ExtractImageScansController {
             // Check if input file is a PDF
             if ("pdf".equalsIgnoreCase(extension)) {
                 // Load PDF document
-                try (PDDocument document = pdfDocumentFactory.load(form.getFileInput())) {
+                try (PDDocument document = pdfDocumentFactory.load(inputFile)) {
                     PDFRenderer pdfRenderer = new PDFRenderer(document);
                     pdfRenderer.setSubsamplingAllowed(true);
                     int pageCount = document.getNumberOfPages();
@@ -120,7 +102,7 @@ public class ExtractImageScansController {
                 }
             } else {
                 tempInputFile = Files.createTempFile("input_", "." + extension);
-                form.getFileInput().transferTo(tempInputFile);
+                inputFile.transferTo(tempInputFile);
                 // Add input file path to images list
                 images.add(tempInputFile.toString());
             }
@@ -140,15 +122,15 @@ public class ExtractImageScansController {
                                         images.get(i),
                                         tempDir.toString(),
                                         "--angle_threshold",
-                                        String.valueOf(form.getAngleThreshold()),
+                                        String.valueOf(request.getAngleThreshold()),
                                         "--tolerance",
-                                        String.valueOf(form.getTolerance()),
+                                        String.valueOf(request.getTolerance()),
                                         "--min_area",
-                                        String.valueOf(form.getMinArea()),
+                                        String.valueOf(request.getMinArea()),
                                         "--min_contour_area",
-                                        String.valueOf(form.getMinContourArea()),
+                                        String.valueOf(request.getMinContourArea()),
                                         "--border_size",
-                                        String.valueOf(form.getBorderSize())));
+                                        String.valueOf(request.getBorderSize())));
 
                 // Run CLI command
                 ProcessExecutorResult returnCode =

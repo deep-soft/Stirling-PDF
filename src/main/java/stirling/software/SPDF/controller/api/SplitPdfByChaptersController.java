@@ -12,7 +12,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDDocumentOutline;
 import org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline.PDOutlineItem;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -29,6 +28,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.PdfMetadata;
@@ -41,18 +41,12 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RequestMapping("/api/v1/general")
 @Slf4j
 @Tag(name = "General", description = "General APIs")
+@RequiredArgsConstructor
 public class SplitPdfByChaptersController {
 
     private final PdfMetadataService pdfMetadataService;
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public SplitPdfByChaptersController(
-            PdfMetadataService pdfMetadataService, CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfMetadataService = pdfMetadataService;
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     private static List<Bookmark> extractOutlineItems(
             PDDocument sourceDocument,
@@ -133,7 +127,7 @@ public class SplitPdfByChaptersController {
         Path zipFile = null;
 
         try {
-            boolean includeMetadata = request.getIncludeMetadata();
+            boolean includeMetadata = Boolean.TRUE.equals(request.getIncludeMetadata());
             Integer bookmarkLevel =
                     request.getBookmarkLevel(); // levels start from 0 (top most bookmarks)
             if (bookmarkLevel < 0) {
@@ -167,7 +161,7 @@ public class SplitPdfByChaptersController {
                         .body("Unable to extract outline items".getBytes());
             }
 
-            boolean allowDuplicates = request.getAllowDuplicates();
+            boolean allowDuplicates = Boolean.TRUE.equals(request.getAllowDuplicates());
             if (!allowDuplicates) {
                 /*
                 duplicates are generated when multiple bookmarks correspond to the same page,

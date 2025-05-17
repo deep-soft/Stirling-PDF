@@ -29,7 +29,6 @@ public class PostHogService {
     private final Environment env;
     private boolean configDirMounted;
 
-    @Autowired
     public PostHogService(
             PostHog postHog,
             @Qualifier("UUID") String uuid,
@@ -63,6 +62,8 @@ public class PostHogService {
         if (!applicationProperties.getSystem().isAnalyticsEnabled()) {
             return;
         }
+
+        properties.put("app_version", appVersion);
         postHog.capture(uniqueId, eventName, properties);
     }
 

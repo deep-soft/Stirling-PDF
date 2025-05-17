@@ -5,7 +5,6 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.pixee.security.Filenames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import lombok.RequiredArgsConstructor;
 
 import stirling.software.SPDF.model.api.PDFComparisonAndCount;
 import stirling.software.SPDF.model.api.PDFWithPageNums;
@@ -30,14 +31,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/filter")
 @Tag(name = "Filter", description = "Filter APIs")
+@RequiredArgsConstructor
 public class FilterController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public FilterController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(consumes = "multipart/form-data", value = "/filter-contains-text")
     @Operation(
@@ -80,7 +77,7 @@ public class FilterController {
     public ResponseEntity<byte[]> pageCount(@ModelAttribute PDFComparisonAndCount request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
-        String pageCount = request.getPageCount();
+        int pageCount = request.getPageCount();
         String comparator = request.getComparator();
         // Load the PDF
         PDDocument document = pdfDocumentFactory.load(inputFile);
@@ -90,13 +87,13 @@ public class FilterController {
         // Perform the comparison
         switch (comparator) {
             case "Greater":
-                valid = actualPageCount > Integer.parseInt(pageCount);
+                valid = actualPageCount > pageCount;
                 break;
             case "Equal":
-                valid = actualPageCount == Integer.parseInt(pageCount);
+                valid = actualPageCount == pageCount;
                 break;
             case "Less":
-                valid = actualPageCount < Integer.parseInt(pageCount);
+                valid = actualPageCount < pageCount;
                 break;
             default:
                 throw new IllegalArgumentException("Invalid comparator: " + comparator);
@@ -156,7 +153,7 @@ public class FilterController {
     public ResponseEntity<byte[]> fileSize(@ModelAttribute FileSizeRequest request)
             throws IOException, InterruptedException {
         MultipartFile inputFile = request.getFileInput();
-        String fileSize = request.getFileSize();
+        long fileSize = request.getFileSize();
         String comparator = request.getComparator();
 
         // Get the file size
@@ -166,13 +163,13 @@ public class FilterController {
         // Perform the comparison
         switch (comparator) {
             case "Greater":
-                valid = actualFileSize > Long.parseLong(fileSize);
+                valid = actualFileSize > fileSize;
                 break;
             case "Equal":
-                valid = actualFileSize == Long.parseLong(fileSize);
+                valid = actualFileSize == fileSize;
                 break;
             case "Less":
-                valid = actualFileSize < Long.parseLong(fileSize);
+                valid = actualFileSize < fileSize;
                 break;
             default:
                 throw new IllegalArgumentException("Invalid comparator: " + comparator);

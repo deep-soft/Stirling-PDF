@@ -10,7 +10,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import lombok.RequiredArgsConstructor;
+
 import stirling.software.SPDF.model.api.general.CropPdfForm;
 import stirling.software.SPDF.service.CustomPDFDocumentFactory;
 import stirling.software.SPDF.utils.WebResponseUtils;
@@ -27,14 +28,10 @@ import stirling.software.SPDF.utils.WebResponseUtils;
 @RestController
 @RequestMapping("/api/v1/general")
 @Tag(name = "General", description = "General APIs")
+@RequiredArgsConstructor
 public class CropController {
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
-
-    @Autowired
-    public CropController(CustomPDFDocumentFactory pdfDocumentFactory) {
-        this.pdfDocumentFactory = pdfDocumentFactory;
-    }
 
     @PostMapping(value = "/crop", consumes = "multipart/form-data")
     @Operation(
@@ -42,8 +39,8 @@ public class CropController {
             description =
                     "This operation takes an input PDF file and crops it according to the given"
                             + " coordinates. Input:PDF Output:PDF Type:SISO")
-    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm form) throws IOException {
-        PDDocument sourceDocument = pdfDocumentFactory.load(form);
+    public ResponseEntity<byte[]> cropPdf(@ModelAttribute CropPdfForm request) throws IOException {
+        PDDocument sourceDocument = pdfDocumentFactory.load(request);
 
         PDDocument newDocument =
                 pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDocument);
@@ -67,7 +64,8 @@ public class CropController {
             contentStream.saveGraphicsState();
 
             // Define the crop area
-            contentStream.addRect(form.getX(), form.getY(), form.getWidth(), form.getHeight());
+            contentStream.addRect(
+                    request.getX(), request.getY(), request.getWidth(), request.getHeight());
             contentStream.clip();
 
             // Draw the entire formXObject
@@ -79,7 +77,11 @@ public class CropController {
 
             // Now, set the new page's media box to the cropped size
             newPage.setMediaBox(
-                    new PDRectangle(form.getX(), form.getY(), form.getWidth(), form.getHeight()));
+                    new PDRectangle(
+                            request.getX(),
+                            request.getY(),
+                            request.getWidth(),
+                            request.getHeight()));
         }
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -90,7 +92,7 @@ public class CropController {
         byte[] pdfContent = baos.toByteArray();
         return WebResponseUtils.bytesToWebResponse(
                 pdfContent,
-                form.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
+                request.getFileInput().getOriginalFilename().replaceFirst("[.][^.]+$", "")
                         + "_cropped.pdf");
     }
 }

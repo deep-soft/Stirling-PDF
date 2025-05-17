@@ -153,6 +153,7 @@ services:
       SYSTEM_MAXFILESIZE: "100"
       METRICS_ENABLED: "true"
       SYSTEM_GOOGLEVISIBILITY: "true"
+      SHOW_SURVEY: "true"
     restart: on-failure:5
 ```
 
@@ -540,7 +541,7 @@ This would generate n entries of tr for each person in exampleData
 
    ```html
    <li class="nav-item">
-       <a class="nav-link" th:href="@{/new-feature}">New Feature</a>
+       <a class="nav-link" th:href="@{'/new-feature'}">New Feature</a>
    </li>
    ```
 

@@ -41,8 +41,14 @@
   <link rel="stylesheet" th:href="@{'/css/bootstrap-icons.min.css'}">
 
   <!-- Pixel, doesn't collect any PII-->
-  <img referrerpolicy="no-referrer-when-downgrade" src="https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92" style="position: absolute; visibility: hidden;"/>
-  
+  <img th:if="${!@disablePixel}" referrerpolicy="no-referrer-when-downgrade"
+     th:src="'https://pixel.stirlingpdf.com/a.png?x-pxid=4f5fa02f-a065-4efb-bb2c-24509a4b6b92' 
+             + '&machineType=' + ${@machineType} 
+             + '&appVersion=' + ${@appVersion} 
+             + '&licenseType=' + ${@license} 
+             + '&loginEnabled=' + ${@loginEnabled}"
+     style="position: absolute; visibility: hidden;" />
+     
   <!-- Custom -->
   <link rel="stylesheet" th:href="@{'/css/general.css'}">
   <link rel="stylesheet" th:href="@{'/css/theme/theme.css'}">
@@ -84,13 +90,11 @@
 
     function UpdatePosthogConsent(){
       if(typeof(posthog) == "undefined") {
-        console.log("Posthog not initialised");
         return;
       }
 
       window.CookieConsent.acceptedCategory('analytics')?
         posthog.opt_in_capturing() : posthog.opt_out_capturing();
-      console.log("Posthog: Opted " + (posthog.has_opted_out_capturing()? "out" : "in"));
     }
     const stirlingPDFLabel = /*[[${@StirlingPDFLabel}]]*/ '';
     const analyticsEnabled = /*[[${@analyticsEnabled}]]*/ false;
@@ -150,8 +154,9 @@
       const baseUrl = window.location.hostname;
       posthog.register_once({
         'hostname': baseUrl,
-        'UUID': /*[[${@UUID}]]*/ ''
-      })
+        'UUID': /*[[${@UUID}]]*/ '',
+        'app_version': /*[[${@appVersion}]]*/ '',
+      });
     }
 
     window.addEventListener("cc:onConsent", UpdatePosthogConsent);
@@ -241,6 +246,10 @@
         window.stirlingPDF.sessionExpired = /*[[#{session.expired}]]*/ '';
         window.stirlingPDF.refreshPage = /*[[#{session.refreshPage}]]*/ 'Refresh Page';
         window.stirlingPDF.error = /*[[#{error}]]*/ "Error";
+        window.stirlingPDF.uploadLimitReadable = /*[[${@uploadLimitService.getReadableUploadLimit()}]]*/ 'Unlimited';
+        window.stirlingPDF.uploadLimit = /*[[${@uploadLimitService.getUploadLimit()}]]*/ 0;
+        window.stirlingPDF.uploadLimitExceededSingular = /*[[#{uploadLimitExceededSingular}]]*/ 'is too large. Maximum allowed size is';
+        window.stirlingPDF.uploadLimitExceededPlural = /*[[#{uploadLimitExceededPlural}]]*/ 'are too large. Maximum allowed size is';
       })();
   </script>
   <script type="module" th:src="@{'/pdfjs-legacy/pdf.mjs'}"></script>
@@ -289,8 +298,11 @@
       </div>
     </div>
     <div class="selected-files flex-wrap"></div>
+	<div class="text-muted small mt-0 text-end w-100" th:if="${@uploadLimitService.getUploadLimit() != 0}">
+	    <span th:text="#{uploadLimit}">Maximum file size: </span>
+	    <span th:text="${@uploadLimitService.getReadableUploadLimit()}"></span>
+	</div>
   </div>
-
   <div class="progressBarContainer" style="display: none; position: relative;">
     <div class="progress" style="height: 1rem;">
       <div class="progressBar progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar"
