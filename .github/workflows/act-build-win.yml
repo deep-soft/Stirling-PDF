@@ -133,8 +133,10 @@ jobs:
           files: ./build/launch4j/${{ env.PRG_NAME }}-Server${{ matrix.file_suffix }}.exe
 
       - name: Rename jar binaries
+        continue-on-error: true      
         run: |
-          cp ./build/libs/${{ env.PRG_NAME }}-${{ env.PRG_VER }}.jar ./build/libs/${{ env.PRG_NAME }}${{ matrix.file_suffix }}.jar
+          ls ./build/libs/*;
+          cp ./build/libs/${{ env.PRG_NAME }}-${{ env.PRG_VER }}.jar ./build/libs/${{ env.PRG_NAME }}${{ matrix.file_suffix }}.jar;
 
       - name: Upload Assets jar binaries
         if: ${{ inputs.upload_artifacts }}
